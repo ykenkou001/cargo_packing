@@ -16,6 +16,7 @@ from cargo_packing.algorithms.basic_algorithms import (
     multi_layer_3d_loading,
 )
 from cargo_packing.container import Container
+from cargo_packing.evaluation import compare_algorithm_performance
 from cargo_packing.utils import (
     create_seed_cargo_csv,
     get_cargo_list,
@@ -47,6 +48,21 @@ def parse_args():
         "--create-sample-data",
         action="store_true",
         help="サンプルの荷物データCSVファイルを作成",
+    )
+    parser.add_argument(
+        "--evaluate", action="store_true", help="全アルゴリズムを定量評価して結果を比較"
+    )
+    parser.add_argument(
+        "--export-csv",
+        type=str,
+        default="algorithm_comparison.csv",
+        help="評価結果のCSV出力先（--evaluateと併用）",
+    )
+    parser.add_argument(
+        "--export-graph",
+        type=str,
+        default="algorithm_comparison.png",
+        help="評価結果のグラフ画像出力先（--evaluateと併用）",
     )
 
     return parser.parse_args()
@@ -95,6 +111,21 @@ def main():
         f"コンテナのサイズ: {container_length} x {container_width} x {container_height}"
     )
     print(f"最大積載重量: {max_weight}")
+
+    # アルゴリズム定量評価モード
+    if args.evaluate:
+        print("\nアルゴリズムの定量評価を実行中...")
+        compare_algorithm_performance(
+            cargo_list,
+            container_length,
+            container_width,
+            container_height,
+            max_weight,
+            export_csv=True,
+            visualize=True,
+            visualization_path=args.export_graph,
+        )
+        return
 
     # アルゴリズムの種類に基づいて処理を分岐
     algorithm_type = config["algorithm"]["type"].lower()
@@ -194,7 +225,5 @@ if __name__ == "__main__":
         print(f"エラーが発生しました: {e}", file=sys.stderr)
         import traceback
 
-        traceback.print_exc()
-        sys.exit(1)
         traceback.print_exc()
         sys.exit(1)
